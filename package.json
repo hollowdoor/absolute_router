@@ -33,9 +33,19 @@
     "whatwg-fetch": "^2.0.3"
   },
   "dependencies": {
-    "animation-frame-polyfill": "^1.0.1",
     "days": "^1.1.1",
     "months": "^1.1.0"
   },
-  "module": "dist/bundle.es.js"
+  "module": "dist/bundle.es.js",
+  "directories": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/hollowdoor/absolute_router.git"
+  },
+  "bugs": {
+    "url": "https://github.com/hollowdoor/absolute_router/issues"
+  },
+  "homepage": "https://github.com/hollowdoor/absolute_router#readme"
 }
