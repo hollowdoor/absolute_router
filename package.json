@@ -1,0 +1,41 @@
+{
+  "name": "absolute-router",
+  "version": "1.0.0",
+  "description": "A router for all",
+  "main": "dist/bundle.js",
+  "jsnext:main": "dist/bundle.es.js",
+  "scripts": {
+    "test": "npm run build && npm run test1",
+    "test1": "tap node_test/*.js",
+    "build": "ebam",
+    "serve": "superstatic test --port 8080 --host 127.0.0.1"
+  },
+  "ebam": {
+    "entry": "src/index.js",
+    "test": {
+      "src": "test/src.js",
+      "dest": "test/code.js"
+    }
+  },
+  "keywords": [
+    "DOM",
+    "html"
+  ],
+  "author": "Quentin Engles <hollowdoor99@gmail.com> (https://hollowdoor.github.io/)",
+  "license": "MIT",
+  "devDependencies": {
+    "rollup": "^0.41.6",
+    "rollup-plugin-buble": "^0.15.0",
+    "rollup-plugin-commonjs": "^8.0.2",
+    "rollup-plugin-node-resolve": "^3.0.0",
+    "tap": "^10.3.3",
+    "uglify-js": "^2.8.22",
+    "whatwg-fetch": "^2.0.3"
+  },
+  "dependencies": {
+    "animation-frame-polyfill": "^1.0.1",
+    "days": "^1.1.1",
+    "months": "^1.1.0"
+  },
+  "module": "dist/bundle.es.js"
+}
