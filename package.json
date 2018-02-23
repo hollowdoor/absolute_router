@@ -1,6 +1,6 @@
 {
   "name": "absolute-router",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "A router for all",
   "main": "dist/bundle.js",
   "jsnext:main": "dist/bundle.es.js",
