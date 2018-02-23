@@ -1,77 +1,7 @@
 import { getURL, getSearch } from './url_stuff.js';
 import View from './return_view.js';
-
-function createBranch(parent, phrase){
-
-    if(parent[phrase]){
-        return parent[phrase];
-    }
-
-    let info = {
-        name: phrase,
-        child: null,
-        parent: parent,
-        children: []
-    };
-
-    let branch = {__info: info};
-
-    const setParam = type => {
-        info.type = type;
-        info.property = phrase.slice(1);
-        if(parent.__info.child){
-            throw new Error(`Parent branch ${parent.name} already has a child.`);
-        }
-        parent.__info.child = phrase;
-    };
-
-    const setPattern = type => {
-        let [m, pattern, name] = phrase.match(/^\{([\s\S]+?)\}([\s\S]+)$/);
-        info.type = type;
-        info.property = name;
-        info.pattern = new RegExp(pattern);
-        parent.__info.children.push(phrase);
-    };
-
-    if(phrase.length){
-        info.property = phrase;
-        if(phrase[0] === ':'){
-            setParam('parameter');
-        }else if(phrase[0] === '*'){
-            setParam('splat');
-        }else if(/^\{[\s\S]+?\}[\s\S]+$/.test(phrase)){
-            setPattern('regex');
-        }else if(/^[0-5]{3}/.test(phrase)){
-            info.type = 'error';
-        }else{
-            info.type = 'normal';
-        }
-    }
-
-    parent[phrase] = branch;
-    return branch;
-}
-
-export function createRouteTree(base, path, handler){
-
-    const createLeaf = (branch) => {
-        branch.__info.handler = handler;
-        branch.__info.children = [];
-        branch.__info.path = path;
-        return base;
-    };
-
-    if(path === '/'){
-        base.__info = {
-            type: 'root'
-        };
-
-        return createLeaf(base);
-    }
-
-    let leaf = path.split('/').slice(1).reduce(createBranch, base);
-    return createLeaf(leaf);
-}
+import { Tree, Branch } from './tree.js';
+export { Tree };
 
 export class RouteResolver {
     constructor(router, address, args, base){

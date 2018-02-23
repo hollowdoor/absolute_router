@@ -100,80 +100,96 @@ View.isView = function(val){
     return (typeof val === 'object' && 'respond' in val && typeof val['respond'] === 'function');
 };
 
-function createBranch(parent, phrase){
+var Branch = function Branch(ref){
+    if ( ref === void 0 ) ref = {};
+    var parent = ref.parent; if ( parent === void 0 ) parent = {};
+    var phrase = ref.phrase; if ( phrase === void 0 ) phrase = '';
+
+
+    var info = this.__info = {
+        name: phrase,
+        type: 'normal',
+        parent: parent,
+        property: phrase,
+        child: null,
+        children: []
+    };
+
+    parent[phrase] = this;
+
+    if(phrase[0] === ':'){
+        info.type = 'parameter';
+        info.property = phrase.slice(1);
+        parent.__info.child = phrase;
+    }else if(phrase[0] === '*'){
+        info.type = 'splat';
+        info.property = phrase.slice(1);
+        parent.__info.child = phrase;
+    }else if(/^\{[\s\S]+?\}[\s\S]+$/.test(phrase)){
+        var ref$1 = phrase.match(/^\{([\s\S]+?)\}([\s\S]+)$/);
+        var m = ref$1[0];
+        var pattern = ref$1[1];
+        var name = ref$1[2];
+        info.type = 'regex';
+        info.property = name;
+        info.pattern = new RegExp(pattern);
+        parent.__info.children.push(phrase);
+    }else if(/^[0-5]{3}/.test(phrase)){
+        info.type = 'error';
+    }
+};
+Branch.leafFrom = function leafFrom (branch, ref){
+        if ( ref === void 0 ) ref = {};
+        var path = ref.path; if ( path === void 0 ) path = '';
+        var handler = ref.handler; if ( handler === void 0 ) handler = null;
+        var type = ref.type; if ( type === void 0 ) type = null;
+
+    branch.__info.type = type
+    ? type
+    : branch.__info.type;
+    branch.__info.handler = handler;
+    branch.__info.children = [];
+    branch.__info.path = path;
+    return branch;
+};
+Branch.create = function create (ref){
+        var parent = ref.parent;
+        var phrase = ref.phrase;
 
     if(parent[phrase]){
         return parent[phrase];
     }
+    return new Branch({parent: parent, phrase: phrase});
+};
 
-    var info = {
-        name: phrase,
-        child: null,
-        parent: parent,
-        children: []
-    };
+var Tree = function Tree () {};
 
-    var branch = {__info: info};
-
-    var setParam = function (type) {
-        info.type = type;
-        info.property = phrase.slice(1);
-        if(parent.__info.child){
-            throw new Error(("Parent branch " + (parent.name) + " already has a child."));
-        }
-        parent.__info.child = phrase;
-    };
-
-    var setPattern = function (type) {
-        var ref = phrase.match(/^\{([\s\S]+?)\}([\s\S]+)$/);
-        var m = ref[0];
-        var pattern = ref[1];
-        var name = ref[2];
-        info.type = type;
-        info.property = name;
-        info.pattern = new RegExp(pattern);
-        parent.__info.children.push(phrase);
-    };
-
-    if(phrase.length){
-        info.property = phrase;
-        if(phrase[0] === ':'){
-            setParam('parameter');
-        }else if(phrase[0] === '*'){
-            setParam('splat');
-        }else if(/^\{[\s\S]+?\}[\s\S]+$/.test(phrase)){
-            setPattern('regex');
-        }else if(/^[0-5]{3}/.test(phrase)){
-            info.type = 'error';
-        }else{
-            info.type = 'normal';
-        }
-    }
-
-    parent[phrase] = branch;
-    return branch;
-}
-
-function createRouteTree(base, path, handler){
-
-    var createLeaf = function (branch) {
-        branch.__info.handler = handler;
-        branch.__info.children = [];
-        branch.__info.path = path;
-        return base;
-    };
+Tree.prototype.constuctor = function constuctor (){
+    this.__info = {};
+};
+Tree.branch = function branch (base, ref){
+        var path = ref.path;
+        var handler = ref.handler;
 
     if(path === '/'){
         base.__info = {
             type: 'root'
         };
 
-        return createLeaf(base);
+        return Branch.leafFrom(base, {
+            path: path,
+            handler: handler,
+            type: 'root'
+        });
     }
 
-    var leaf = path.split('/').slice(1).reduce(createBranch, base);
-    return createLeaf(leaf);
-}
+    var leaf = path.split('/').slice(1)
+    .reduce(function (parent, phrase){
+        return Branch.create({parent: parent, phrase: phrase})
+    }, base);
+
+    return Branch.leafFrom(leaf, {path: path, handler: handler});
+};
 
 var RouteResolver = function RouteResolver(router, address, args, base){
     this.router = router;
@@ -334,7 +350,8 @@ var Router = function Router(options){
     var relay = options['relay'];
     var base = options['base'];
     this['@@router'] = true;
-    this.routes = {};
+    //this.routes = {};
+    this.routes = new Tree();
 
     if(typeof relay !== 'function'){
         throw new Error('options.relay is not a function');
@@ -353,7 +370,11 @@ Router.prototype.route = function route (routes){
         var this$1 = this;
 
     Object.keys(routes).forEach(function (pattern){
-        createRouteTree(this$1.routes, pattern, routes[pattern]);
+        Tree.branch(this$1.routes, {
+            path: pattern,
+            handler: routes[pattern]
+        });
+        //createRouteTree(this.routes, pattern, routes[pattern]);
     });
     return this;
 };

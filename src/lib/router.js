@@ -1,5 +1,5 @@
 import { getURL, getSearch } from './url_stuff.js';
-import { createRouteTree, RouteResolver } from './route_tree.js';
+import { RouteResolver, Tree } from './route_tree.js';
 import { throwError } from './throw_error.js';
 
 export class Router {
@@ -8,7 +8,8 @@ export class Router {
         const relay = options['relay'];
         const base = options['base'];
         this['@@router'] = true;
-        this.routes = {};
+        //this.routes = {};
+        this.routes = new Tree();
 
         if(typeof relay !== 'function'){
             throw new Error('options.relay is not a function');
@@ -23,7 +24,11 @@ export class Router {
     }
     route(routes){
         Object.keys(routes).forEach(pattern=>{
-            createRouteTree(this.routes, pattern, routes[pattern]);
+            Tree.branch(this.routes, {
+                path: pattern,
+                handler: routes[pattern]
+            });
+            //createRouteTree(this.routes, pattern, routes[pattern]);
         });
         return this;
     }
